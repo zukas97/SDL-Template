@@ -11,7 +11,6 @@
 #define FPS 60
 #define FRAME_TIME (1000/FPS)
 
-bool running = false;
 
 bool init(SDL_Window** win, SDL_Renderer** rend) {
 	if (SDL_Init(SDL_INIT_EVERYTHING)) {
@@ -32,7 +31,7 @@ bool init(SDL_Window** win, SDL_Renderer** rend) {
 		return false;
 	}
 
-	*rend = SDL_CreateRenderer(*win, -1, SDL_RENDERER_ACCELERATED || SDL_RENDERER_PRESENTVSYNC);
+	*rend = SDL_CreateRenderer(*win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	if (!*rend) {
 		perror("renderer");
@@ -43,12 +42,12 @@ bool init(SDL_Window** win, SDL_Renderer** rend) {
 	return true;
 }
 
-void input() {
+void input(bool* running) {
 	SDL_Event event;
 	if (SDL_PollEvent(&event)) {
 		switch (event.type) {
 			case SDL_QUIT:
-				running = false;
+				*running = false;
 				printf("break\n");
 				break;
 			case SDL_KEYUP:
@@ -56,7 +55,7 @@ void input() {
 			case SDL_KEYDOWN:
 				switch (event.key.keysym.sym) {
 					case SDLK_ESCAPE:
-						running = false;
+						*running = false;
 						break;
 				break;
 				}
@@ -71,14 +70,14 @@ void render(SDL_Renderer* rend) {
 
 }
 
-void update(float delta) {
+void update(float* delta) {
 	int last_frame_time;
 	int wait_time = FRAME_TIME - (SDL_GetTicks() - last_frame_time);
 	if (wait_time > 0 && wait_time <= FRAME_TIME) {
 		SDL_Delay(wait_time);
 	}
 
-	delta = (SDL_GetTicks() - last_frame_time) / 1000.0f;
+	*delta = (SDL_GetTicks() - last_frame_time) / 1000.0f;
 
 	last_frame_time = SDL_GetTicks();
 
@@ -94,12 +93,13 @@ int main() {
 	SDL_Window* win;
 	SDL_Renderer* rend;
 	float delta;
+	bool running = false;
 	running = init(&win, &rend);
 
 	while (running) {
-		input();
+		input(&running);
 		render(rend);
-		update(delta);
+		update(&delta);
 	}
 	printf("exiting\n");
 	SDL_DestroyRenderer(rend);
